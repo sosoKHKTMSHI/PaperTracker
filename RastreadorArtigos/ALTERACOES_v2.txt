@@ -1,0 +1,11 @@
+ALTERAÇÕES PRINCIPAIS — VERSÃO 2.0
+
+- Processo completo único: enriquece IDs, busca acesso aberto, consulta PMC/BioC e verifica PDFs.
+- PDFs só são marcados como disponíveis após validação real do arquivo.
+- Baixar PDFs ignora a seleção e baixa todos os PDFs confirmados.
+- Gerar ZIP ignora a seleção e cria pacote enxuto com PDFs, textos estruturados opcionais,
+  status_artigos.xlsx, status_artigos.html e Relatorio_Rastreamento.txt.
+- Novo projeto / Zerar limpa artigos, resultados, logs e histórico, preservando configurações.
+- Seleção pode ser removida com Esc, clique vazio ou botão Limpar seleção.
+- Removidos do pacote gerado: CSV, links, log, XML da relação e manifesto.
+- Resumo separa PDFs confirmados, não verificados, não localizados e textos estruturados.

@@ -1,0 +1,8 @@
+{
+  "tool_name": "RastreadorArtigos",
+  "email": "felipe.somavila@hotmail.com",
+  "openalex_api_key": "gJUGiSpuir522HCb7g7ssP",
+  "timeout_seconds": 30.0,
+  "max_retries": 3,
+  "request_interval_seconds": 0.4
+}

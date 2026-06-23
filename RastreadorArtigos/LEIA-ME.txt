@@ -1,0 +1,13 @@
+RASTREADOR DE ARTIGOS — VERSÃO 2.0
+
+1. Execute iniciar.bat na primeira utilização.
+2. Configure o e-mail das APIs e a chave OpenAlex.
+3. Importe ou cole a relação de artigos.
+4. Clique em Executar processo completo.
+5. O processo localiza links e verifica se o PDF pode ser baixado.
+6. Baixar PDFs gera uma pasta com PDFs confirmados e Relatorio_Rastreamento.txt.
+7. Gerar ZIP cria apenas: PDFs, textos estruturados opcionais, status_artigos.xlsx,
+   status_artigos.html e Relatorio_Rastreamento.txt.
+8. Novo projeto / Zerar remove artigos e resultados, preservando as configurações.
+
+A pasta __pycache__ é gerada automaticamente e não precisa ser copiada.
