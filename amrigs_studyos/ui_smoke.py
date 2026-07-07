@@ -8,14 +8,17 @@ from pathlib import Path
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 from studyos.app import (
-    ContentPage, DashboardPage, ErrorsPage, MainWindow, ReviewsPage,
-    SchedulePage, SettingsPage, TelemetryPage, TodayPage,
+    ContentPage, DashboardPage, ErrorsPage, MainWindow, MetricCard, ReviewsPage,
+    SchedulePage, SettingsPage, TelemetryPage, TodayPage, QHeaderView, QTableWidget,
 )
 from studyos.content_seed import seed_catalog
 from studyos.db import Database
-from studyos.services import ensure_default_schedule
+from studyos.services import (
+    area_stats, dashboard_stats, ensure_default_schedule, operational_priority_rows,
+)
 
 PAGES = {
     "dashboard": DashboardPage,
@@ -32,13 +35,34 @@ PAGES = {
 
 def main() -> int:
     name = sys.argv[1] if len(sys.argv) > 1 else "main"
-    cls = PAGES[name]
     app = QApplication.instance() or QApplication([])
     with tempfile.TemporaryDirectory() as tmp:
         os.environ["AMRIGS_STUDYOS_HOME"] = tmp
         db = Database(Path(tmp) / "ui-test.sqlite3")
         seed_catalog(db)
         ensure_default_schedule(db)
+
+        if name == "dashboard-data":
+            assert dashboard_stats(db)
+            assert len(area_stats(db)) == 5
+            assert operational_priority_rows(db, 5)
+            db.close()
+            print("UI smoke test OK: dashboard-data")
+            return 0
+
+        if name == "dashboard-widgets":
+            metric = MetricCard("Teste", "1", "ok")
+            table = QTableWidget(0, 3)
+            table.setHorizontalHeaderLabels(["A", "B", "C"])
+            table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+            table.setSelectionBehavior(QTableWidget.SelectRows)
+            metric.show(); table.show(); app.processEvents()
+            assert metric.isVisible() and table.isVisible()
+            metric.close(); table.close(); db.close()
+            print("UI smoke test OK: dashboard-widgets")
+            return 0
+
+        cls = PAGES[name]
         widget = cls(db)
         widget.show()
         app.processEvents()
