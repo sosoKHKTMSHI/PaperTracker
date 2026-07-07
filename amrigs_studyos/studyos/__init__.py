@@ -2,23 +2,29 @@ __version__ = "0.1.0"
 
 
 def _install_qt_compatibility_aliases() -> None:
-    """Keep the UI compatible with both scoped and legacy PySide6 enums."""
+    """Normalize scoped PySide6 enums before the interface module is imported."""
     try:
-        from PySide6.QtWidgets import QAbstractItemView, QDialogButtonBox, QHeaderView, QTableWidget
+        import PySide6.QtWidgets as widgets
     except Exception:
         return
 
-    aliases = [
-        (QTableWidget, "SelectRows", QAbstractItemView.SelectionBehavior.SelectRows),
-        (QHeaderView, "Stretch", QHeaderView.ResizeMode.Stretch),
-        (QHeaderView, "ResizeToContents", QHeaderView.ResizeMode.ResizeToContents),
-        (QDialogButtonBox, "Save", QDialogButtonBox.StandardButton.Save),
-        (QDialogButtonBox, "Cancel", QDialogButtonBox.StandardButton.Cancel),
-        (QDialogButtonBox, "Yes", QDialogButtonBox.StandardButton.Yes),
-    ]
-    for cls, name, value in aliases:
-        if not hasattr(cls, name):
-            setattr(cls, name, value)
+    if not hasattr(widgets.QTableWidget, "SelectRows"):
+        class CompatTableWidget(widgets.QTableWidget):
+            SelectRows = widgets.QAbstractItemView.SelectionBehavior.SelectRows
+        widgets.QTableWidget = CompatTableWidget
+
+    if not hasattr(widgets.QHeaderView, "Stretch") or not hasattr(widgets.QHeaderView, "ResizeToContents"):
+        class CompatHeaderView(widgets.QHeaderView):
+            Stretch = widgets.QHeaderView.ResizeMode.Stretch
+            ResizeToContents = widgets.QHeaderView.ResizeMode.ResizeToContents
+        widgets.QHeaderView = CompatHeaderView
+
+    if not hasattr(widgets.QDialogButtonBox, "Save"):
+        class CompatDialogButtonBox(widgets.QDialogButtonBox):
+            Save = widgets.QDialogButtonBox.StandardButton.Save
+            Cancel = widgets.QDialogButtonBox.StandardButton.Cancel
+            Yes = widgets.QDialogButtonBox.StandardButton.Yes
+        widgets.QDialogButtonBox = CompatDialogButtonBox
 
 
 _install_qt_compatibility_aliases()
