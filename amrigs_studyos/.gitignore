@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec
+*.sqlite3
+*.amrigs-save
