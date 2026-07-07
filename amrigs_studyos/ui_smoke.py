@@ -42,12 +42,22 @@ def main() -> int:
         seed_catalog(db)
         ensure_default_schedule(db)
 
-        if name == "dashboard-data":
+        if name == "dashboard-core":
             assert dashboard_stats(db)
+            db.close()
+            print("UI smoke test OK: dashboard-core")
+            return 0
+
+        if name == "dashboard-area":
             assert len(area_stats(db)) == 5
+            db.close()
+            print("UI smoke test OK: dashboard-area")
+            return 0
+
+        if name == "dashboard-priority":
             assert operational_priority_rows(db, 5)
             db.close()
-            print("UI smoke test OK: dashboard-data")
+            print("UI smoke test OK: dashboard-priority")
             return 0
 
         if name == "dashboard-widgets":
