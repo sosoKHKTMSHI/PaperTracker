@@ -44,5 +44,38 @@ jobs:
               stats = dashboard_stats(db, '2026-07-06')
               assert stats['total_items'] >= 300
               db.close()
-          print('AMRIGS StudyOS smoke test OK')
+          print('AMRIGS StudyOS database smoke test OK')
+          PY
+      - name: Install UI dependency
+        run: python -m pip install -r amrigs_studyos/requirements.txt
+      - name: Headless Qt interface smoke test
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          python - <<'PY'
+          import os
+          import sys
+          import tempfile
+          from pathlib import Path
+
+          sys.path.insert(0, str(Path('amrigs_studyos').resolve()))
+          from PySide6.QtWidgets import QApplication
+          from studyos.db import Database
+          from studyos.content_seed import seed_catalog
+          from studyos.services import ensure_default_schedule
+          from studyos.app import MainWindow
+
+          with tempfile.TemporaryDirectory() as tmp:
+              os.environ['AMRIGS_STUDYOS_HOME'] = tmp
+              app = QApplication([])
+              db = Database(Path(tmp) / 'ui-test.sqlite3')
+              seed_catalog(db)
+              ensure_default_schedule(db)
+              window = MainWindow(db)
+              window.show()
+              app.processEvents()
+              assert window.windowTitle().startswith('AMRIGS StudyOS')
+              window.close()
+              app.processEvents()
+          print('AMRIGS StudyOS UI smoke test OK')
           PY
