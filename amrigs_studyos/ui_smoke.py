@@ -8,57 +8,54 @@ from pathlib import Path
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication
-from studyos.app import (
-    ContentPage, DashboardPage, ErrorsPage, MainWindow, MetricCard, ReviewsPage,
-    SchedulePage, SettingsPage, TelemetryPage, TodayPage, QHeaderView, QTableWidget,
-)
 from studyos.content_seed import seed_catalog
 from studyos.db import Database
 from studyos.services import (
     area_stats, dashboard_stats, ensure_default_schedule, operational_priority_rows,
 )
 
-PAGES = {
-    "dashboard": DashboardPage,
-    "today": TodayPage,
-    "schedule": SchedulePage,
-    "reviews": ReviewsPage,
-    "content": ContentPage,
-    "errors": ErrorsPage,
-    "telemetry": TelemetryPage,
-    "settings": SettingsPage,
-    "main": MainWindow,
-}
+
+def _database(tmp: str) -> Database:
+    os.environ["AMRIGS_STUDYOS_HOME"] = tmp
+    db = Database(Path(tmp) / "ui-test.sqlite3")
+    seed_catalog(db)
+    ensure_default_schedule(db)
+    return db
 
 
 def main() -> int:
     name = sys.argv[1] if len(sys.argv) > 1 else "main"
-    app = QApplication.instance() or QApplication([])
     with tempfile.TemporaryDirectory() as tmp:
-        os.environ["AMRIGS_STUDYOS_HOME"] = tmp
-        db = Database(Path(tmp) / "ui-test.sqlite3")
-        seed_catalog(db)
-        ensure_default_schedule(db)
+        db = _database(tmp)
 
         if name == "dashboard-core":
             assert dashboard_stats(db)
             db.close()
             print("UI smoke test OK: dashboard-core")
             return 0
-
         if name == "dashboard-area":
             assert len(area_stats(db)) == 5
             db.close()
             print("UI smoke test OK: dashboard-area")
             return 0
-
         if name == "dashboard-priority":
             assert operational_priority_rows(db, 5)
             db.close()
             print("UI smoke test OK: dashboard-priority")
             return 0
+
+        from PySide6.QtWidgets import QApplication
+        app = QApplication.instance() or QApplication([])
+        if name == "qt-app":
+            assert app is not None
+            db.close()
+            print("UI smoke test OK: qt-app")
+            return 0
+
+        from studyos.app import (
+            ContentPage, DashboardPage, ErrorsPage, MainWindow, MetricCard, ReviewsPage,
+            SchedulePage, SettingsPage, TelemetryPage, TodayPage, QHeaderView, QTableWidget,
+        )
 
         if name == "dashboard-widgets":
             metric = MetricCard("Teste", "1", "ok")
@@ -72,8 +69,18 @@ def main() -> int:
             print("UI smoke test OK: dashboard-widgets")
             return 0
 
-        cls = PAGES[name]
-        widget = cls(db)
+        pages = {
+            "dashboard": DashboardPage,
+            "today": TodayPage,
+            "schedule": SchedulePage,
+            "reviews": ReviewsPage,
+            "content": ContentPage,
+            "errors": ErrorsPage,
+            "telemetry": TelemetryPage,
+            "settings": SettingsPage,
+            "main": MainWindow,
+        }
+        widget = pages[name](db)
         widget.show()
         app.processEvents()
         assert widget.isVisible()
