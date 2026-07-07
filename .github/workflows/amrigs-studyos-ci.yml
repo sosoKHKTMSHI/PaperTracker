@@ -1,0 +1,48 @@
+name: AMRIGS StudyOS CI
+
+on:
+  push:
+    branches:
+      - feature/amrigs-studyos-v0.1
+  pull_request:
+    paths:
+      - 'amrigs_studyos/**'
+      - '.github/workflows/amrigs-studyos-ci.yml'
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile source
+        run: python -m compileall -q amrigs_studyos
+      - name: Database and scheduling smoke test
+        run: |
+          python - <<'PY'
+          import sys
+          import tempfile
+          from datetime import date
+          from pathlib import Path
+
+          sys.path.insert(0, str(Path('amrigs_studyos').resolve()))
+          from studyos.db import Database
+          from studyos.content_seed import seed_catalog
+          from studyos.services import ensure_default_schedule, dashboard_stats
+
+          with tempfile.TemporaryDirectory() as tmp:
+              db = Database(Path(tmp) / 'test.sqlite3')
+              seed_catalog(db)
+              assert db.scalar('SELECT COUNT(*) FROM areas') == 5
+              assert db.scalar('SELECT COUNT(*) FROM blocks') == 37
+              assert db.scalar('SELECT COUNT(*) FROM macro_families') >= 120
+              assert db.scalar('SELECT COUNT(*) FROM content_items') >= 300
+              ensure_default_schedule(db, date(2026, 7, 6))
+              assert db.scalar('SELECT COUNT(*) FROM planned_sessions') == 220
+              stats = dashboard_stats(db, '2026-07-06')
+              assert stats['total_items'] >= 300
+              db.close()
+          print('AMRIGS StudyOS smoke test OK')
+          PY
