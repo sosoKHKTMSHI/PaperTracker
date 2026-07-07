@@ -46,8 +46,12 @@ jobs:
           PY
       - name: Install UI dependency
         run: python -m pip install -q -r amrigs_studyos/requirements.txt
-      - name: UI dashboard data
-        run: python amrigs_studyos/ui_smoke.py dashboard-data
+      - name: UI dashboard core
+        run: python amrigs_studyos/ui_smoke.py dashboard-core
+      - name: UI dashboard area
+        run: python amrigs_studyos/ui_smoke.py dashboard-area
+      - name: UI dashboard priority
+        run: python amrigs_studyos/ui_smoke.py dashboard-priority
       - name: UI dashboard widgets
         run: python amrigs_studyos/ui_smoke.py dashboard-widgets
       - name: UI dashboard
